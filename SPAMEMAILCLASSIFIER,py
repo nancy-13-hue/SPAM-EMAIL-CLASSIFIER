@@ -1,0 +1,56 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, confusion_matrix
+import nltk
+from nltk.corpus import stopwords
+
+# Download stopwords if not already available
+nltk.download('stopwords')
+
+# Load the dataset
+data = pd.read_csv('spam.csv', encoding='latin-1')
+
+# Display the first few rows of the dataset
+print(data.head())
+
+# Clean the dataset
+# We are interested in 'v1' (spam/ham) as the target and 'v2' (email content) as the feature
+data = data[['v1', 'v2']]
+
+# Rename the columns for better clarity
+data.columns = ['Label', 'Message']
+
+# Map labels 'ham' to 0 and 'spam' to 1
+data['Label'] = data['Label'].map({'ham': 0, 'spam': 1})
+
+# Split data into features (X) and target (y)
+X = data['Message']
+y = data['Label']
+
+# Split the dataset into training and testing sets (80% training, 20% testing)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Text Vectorization using CountVectorizer
+vectorizer = CountVectorizer(stop_words=stopwords.words('english'))
+X_train_vec = vectorizer.fit_transform(X_train)
+X_test_vec = vectorizer.transform(X_test)
+
+# Initialize and train the Naive Bayes model
+model = MultinomialNB()
+model.fit(X_train_vec, y_train)
+
+# Make predictions on the test set
+y_pred = model.predict(X_test_vec)
+
+# Evaluate the model's performance
+accuracy = accuracy_score(y_test, y_pred)
+conf_matrix = confusion_matrix(y_test, y_pred)
+
+# Display the results
+print(f"Accuracy: {accuracy * 100:.2f}%")
+print("Confusion Matrix:")
+print(conf_matrix)
+
